@@ -2,7 +2,9 @@ package example.docs.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
@@ -10,7 +12,8 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "document_history")
-@AllArgsConstructor
+@Getter
+@Setter
 @NoArgsConstructor
 public class DocumentHistory {
 
@@ -20,10 +23,13 @@ public class DocumentHistory {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "document_id")
-    public Document document;
+    private Document document;
 
+    @Column(nullable = false)
     private String initiator;
-    private String action;
+
+    @Enumerated(EnumType.STRING)
+    private DocumentAction action;
 
     @CreationTimestamp
     @Column(name = "created_at")
@@ -31,7 +37,7 @@ public class DocumentHistory {
 
     private String comment;
 
-    public DocumentHistory(Document document, String initiator, String action, String comment) {
+    public DocumentHistory(Document document, String initiator, DocumentAction action, String comment) {
         this.document = document;
         this.initiator = initiator;
         this.action = action;

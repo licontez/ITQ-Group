@@ -1,9 +1,8 @@
 package example.docs.service;
 
-import example.docs.entity.Document;
-import example.docs.entity.DocumentHistory;
-import example.docs.entity.DocumentStatus;
-import example.docs.entity.RegistryEntry;
+import example.docs.entity.*;
+import example.docs.exception.InvalidStatusTransitionException;
+import example.docs.exception.RegistryRegistrationException;
 import example.docs.repository.DocumentHistoryRepository;
 import example.docs.repository.DocumentRepository;
 import example.docs.repository.RegistryEntryRepository;
@@ -27,31 +26,34 @@ public class DocumentProcessor {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void processSubmit(UUID documentId, String initiator) {
         Document document = documentRepository.findById(documentId)
-                .orElseThrow(() -> new EntityNotFoundException("Document not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Document not found: " + documentId));
 
         if (document.getStatus() != DocumentStatus.DRAFT) {
-            throw new IllegalArgumentException("CONFLICT: Invalid status transition");
+            throw new InvalidStatusTransitionException("CONFLICT: Cannot submit document in status " + document.getStatus());
         }
+
         document.setStatus(DocumentStatus.SUBMITTED);
-        historyRepository.save(new DocumentHistory(document, initiator, "SUBMIT", "Sent for approval"));
+
+        historyRepository.save(new DocumentHistory(document, initiator, DocumentAction.SUBMIT, "Sent for approval"));
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void processApprove(UUID documentId, String initiator) {
         Document document = documentRepository.findById(documentId)
-                .orElseThrow(() -> new EntityNotFoundException("NOT_FOUND"));
+                .orElseThrow(() -> new EntityNotFoundException("Document not found: " + documentId));
 
         if (document.getStatus() != DocumentStatus.SUBMITTED) {
-            throw new IllegalArgumentException("CONFLICT: Invalid status transition");
+            throw new InvalidStatusTransitionException("CONFLICT: Cannot approve document in status " + document.getStatus());
         }
+
         document.setStatus(DocumentStatus.APPROVED);
-        historyRepository.save(new DocumentHistory(document, initiator, "APPROVE", "Document approved"));
+
+        historyRepository.save(new DocumentHistory(document, initiator, DocumentAction.APPROVE, "Document approved"));
 
         try {
-            registryRepository.save(new RegistryEntry(document));
+            registryRepository.saveAndFlush(new RegistryEntry(document));
         } catch (DataIntegrityViolationException e) {
-            throw new IllegalArgumentException("REGISTRY_ERROR");
+            throw new RegistryRegistrationException("REGISTRY_ERROR: Failed to create registry entry");
         }
     }
-
 }
