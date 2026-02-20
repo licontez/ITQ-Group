@@ -28,46 +28,40 @@ import java.util.UUID;
 public class DocumentController {
 
     private final DocumentService documentService;
-    private final DocumentRepository documentRepository;
 
     @GetMapping("/search")
-    public List<Document> searchDocuments(@RequestParam(required = false) DocumentStatus status,
+    public Page<Document> searchDocuments(@RequestParam(required = false) DocumentStatus status,
                                           @RequestParam(required = false) String author,
                                           @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
-                                          @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to) {
+                                          @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to,
+                                          @PageableDefault(size = 20) Pageable pageable) { // Добавили Pageable
 
-        return documentService.searchDocuments(status, author, from, to);
+        return documentService.searchDocuments(status, author, from, to, pageable);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Document> getDocument(@PathVariable UUID id) {
-        return documentRepository.findById(id)
+        return documentService.getDocumentWithHistory(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
-    }
-
-    @GetMapping
-    public Page<Document> getAllDocuments(@PageableDefault(size = 20) Pageable pageable) {
-        return documentRepository.findAll(pageable);
     }
 
     @PostMapping("/{id}/concurrency-test")
     public ConcurrencyReportDto testConcurrency(@PathVariable UUID id,
                                                 @RequestParam(defaultValue = "5") int threads,
                                                 @RequestParam(defaultValue = "10") int attempts) {
-
         return documentService.testConcurrency(id, threads, attempts);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Document createdDocument(@Valid @RequestBody CreateDocumentRequest request) {
+    public Document createDocument(@Valid @RequestBody CreateDocumentRequest request) {
         return documentService.createDocument(request.getAuthor(), request.getTitle());
     }
 
     @PostMapping("/batch-get")
     public List<Document> getDocumentsByIds(@RequestBody List<UUID> ids) {
-        return documentRepository.findAllById(ids);
+        return documentService.getDocumentsByIds(ids);
     }
 
     @PostMapping("/submit")
@@ -80,4 +74,3 @@ public class DocumentController {
         return documentService.approveBatch(request.getDocumentIds(), request.getInitiator());
     }
 }
-

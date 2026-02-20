@@ -1,5 +1,6 @@
 package example.docs.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -21,6 +22,7 @@ public class DocumentHistory {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "document_id")
     private Document document;

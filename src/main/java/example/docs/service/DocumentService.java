@@ -128,6 +128,14 @@ public class DocumentService {
         return results;
     }
 
+    public Optional<Document> getDocumentWithHistory(UUID id) {
+        return documentRepository.findWithHistoryById(id);
+    }
+
+    public List<Document> getDocumentsByIds(List<UUID> ids) {
+        return documentRepository.findAllById(ids);
+    }
+
     private String processSingleSubmit(UUID id, String initiator) {
         try {
             documentProcessor.processSubmit(id, initiator);
