@@ -1,0 +1,32 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: document-service
+
+  #1
+  datasource:
+    url: jdbc:postgresql://localhost:5433/docs_db
+    username: docs_user
+    password: docs_pass
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: true
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+    enabled: true
+
+app:
+  workers:
+    batch-size: 10          # Размер пачки документов для воркеров
+    submit-delay: 5000      # Задержка между запусками (мс)
+    approve-delay: 5000
