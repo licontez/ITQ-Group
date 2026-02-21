@@ -2,8 +2,10 @@ package example.docs.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
 public class CreateDocumentRequest {
 
     @NotBlank(message = "Author is required")

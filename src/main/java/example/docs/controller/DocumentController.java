@@ -5,7 +5,6 @@ import example.docs.dto.ConcurrencyReportDto;
 import example.docs.dto.CreateDocumentRequest;
 import example.docs.entity.Document;
 import example.docs.entity.DocumentStatus;
-import example.docs.repository.DocumentRepository;
 import example.docs.service.DocumentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
