@@ -14,7 +14,7 @@ CREATE TABLE documents
 );
 
 -- Индексы для быстрого поиска
-CREATE INDEX idx_docs_status ON documents (status);
+CREATE INDEX idx_docs_status_created_at ON documents (status, created_at);
 CREATE INDEX idx_docs_author ON documents (author);
 CREATE INDEX idx_docs_created_at ON documents (created_at);
 
