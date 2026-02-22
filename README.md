@@ -4,32 +4,28 @@ Backend-сервис для управления жизненным циклом
 
 Стек технологий
 Java 17+ / Spring Boot
-
 PostgreSQL (Docker Compose)
-
 Spring Data JPA / Hibernate
-
 Liquibase
-
-Maven / Gradle
+Maven 
 
 Запуск проекта
 1. Подготовка базы данных
-   В корне проекта находится файл docker-compose.yaml. Поднимите PostgreSQL командой:
+В корне проекта находится файл docker-compose.yaml. Поднимите PostgreSQL командой:
 
 docker-compose up -d
 
-Liquibase автоматически накатит все необходимые миграции при старте приложения (настроена стратегия ddl-auto: validate).
+Liquibase автоматически накатит все необходимые миграции при старте приложения (стратегия ddl-auto: validate).
 
 2. Запуск сервиса
-   Запустите основное приложение DocumentServiceApp через вашу IDE или с помощью инструмента сборки:
+Запустите основное приложение DocumentServiceApp через вашу IDE или с помощью инструмента сборки:
 
 ./mvnw spring-boot:run
 
 Сервис будет запущен на порту: 8080.
 
 3. Запуск утилиты генерации (DocumentGeneratorUtil)
-   В корне проекта находится конфигурационный файл generator.properties. В нем можно задать количество генерируемых документов и URL API:
+В корне проекта находится конфигурационный файл generator.properties. В нем можно задать количество генерируемых документов и URL API:
 
 Properties
 generator.document.count=100
