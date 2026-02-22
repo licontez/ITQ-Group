@@ -23,6 +23,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * Основной сервис для управления документами.
+ * Оркестрирует бизнес-процессы, динамический поиск и пакетную обработку.
+ * Делегирует транзакционную логику отдельных документов в DocumentProcessor.
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -31,6 +36,13 @@ public class DocumentService {
     private final DocumentRepository documentRepository;
     private final DocumentProcessor documentProcessor;
 
+    /**
+     * Создает новый документ в начальном статусе DRAFT с генерацией уникального номера.
+     *
+     * @param author автор документа
+     * @param title  название документа
+     * @return сохраненная сущность документа
+     */
     public Document createDocument(String author, String title) {
         Document document = new Document();
         document.setAuthor(author);
@@ -41,6 +53,17 @@ public class DocumentService {
         return documentRepository.save(document);
     }
 
+    /**
+     * Динамический поиск документов по заданным критериям с использованием JPA Specifications.
+     * Поддерживает пагинацию и фильтрацию по диапазону дат.
+     *
+     * @param status   целевой статус (опционально)
+     * @param author   точное совпадение по автору (опционально)
+     * @param from     начало периода создания (опционально)
+     * @param to       конец периода создания (опционально)
+     * @param pageable настройки пагинации и сортировки
+     * @return страница с результатами поиска
+     */
     public Page<Document> searchDocuments(DocumentStatus status, String author, LocalDateTime from, LocalDateTime to, Pageable pageable) {
         Specification<Document> spec = (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
@@ -64,6 +87,16 @@ public class DocumentService {
         return documentRepository.findAll(spec, pageable);
     }
 
+    /**
+     * Нагрузочное тестирование механизма Optimistic Locking.
+     * Имитирует строгий одновременный доступ к одному документу из заданного пула потоков
+     * с использованием CountDownLatch для синхронизации старта.
+     *
+     * @param docId    идентификатор тестируемого документа
+     * @param threads  размер пула потоков
+     * @param attempts количество конкурентных запросов на утверждение
+     * @return агрегированный отчет с количеством успешных выполнений и конфликтов блокировки
+     */
     public ConcurrencyReportDto testConcurrency(UUID docId, int threads, int attempts) {
         ExecutorService executor = Executors.newFixedThreadPool(threads);
 
@@ -112,6 +145,14 @@ public class DocumentService {
         );
     }
 
+    /**
+     * Пакетный перевод списка документов в статус SUBMITTED.
+     * Выполняется с изоляцией транзакций: падение одного документа не влияет на остальные.
+     *
+     * @param documentIds список идентификаторов
+     * @param initiator   инициатор операции
+     * @return мапа результатов выполнения, key - UUID документа, value - статус операции (SUCCESS, CONFLICT и т.д.)
+     */
     public Map<UUID, String> submitBatch(List<UUID> documentIds, String initiator) {
         Map<UUID, String> results = new HashMap<>();
         for (UUID id : documentIds) {
@@ -120,6 +161,14 @@ public class DocumentService {
         return results;
     }
 
+    /**
+     * Пакетное утверждение списка документов (перевод в APPROVED).
+     * Выполняется с изоляцией транзакций: падение одного документа не влияет на остальные.
+     *
+     * @param documentIds список идентификаторов
+     * @param initiator   инициатор операции
+     * @return мапа результатов выполнения, где ключ - UUID документа, значение - статус операции
+     */
     public Map<UUID, String> approveBatch(List<UUID> documentIds, String initiator) {
         Map<UUID, String> results = new HashMap<>();
         for (UUID id : documentIds) {

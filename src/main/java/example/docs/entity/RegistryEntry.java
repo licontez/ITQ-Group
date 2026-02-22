@@ -9,6 +9,11 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * Запись в реестре утвержденных документов.
+ * Сущность создается исключительно в момент перехода документа в финальный статус APPROVED.
+ * Служит для юридической/бизнес-фиксации факта утверждения.
+ */
 @Entity
 @Table(name = "registry_entries")
 @Getter

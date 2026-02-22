@@ -15,6 +15,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
+/**
+ * Компонент для атомарной обработки жизненного цикла одиночных документов.
+ * Выделен в отдельный сервис для обеспечения независимых транзакций (REQUIRES_NEW).
+ */
 @Service
 @RequiredArgsConstructor
 public class DocumentProcessor {
@@ -23,6 +27,13 @@ public class DocumentProcessor {
     private final DocumentHistoryRepository historyRepository;
     private final RegistryEntryRepository registryRepository;
 
+    /**
+     * Переводит документ из начального статуса DRAFT в SUBMITTED.
+     * Сохраняет соответствующую запись в историю аудита.
+     *
+     * @param documentId идентификатор обрабатываемого документа
+     * @param initiator  имя пользователя или фонового процесса, инициировавшего действие
+     */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void processSubmit(UUID documentId, String initiator) {
         Document document = documentRepository.findById(documentId)
@@ -37,6 +48,13 @@ public class DocumentProcessor {
         historyRepository.save(new DocumentHistory(document, initiator, DocumentAction.SUBMIT, "Sent for approval"));
     }
 
+    /**
+     * Утверждает документ (переводит из SUBMITTED в APPROVED) и синхронно создает запись в реестре.
+     * Сохраняет соответствующую запись в историю аудита.
+     *
+     * @param documentId идентификатор утверждаемого документа
+     * @param initiator  имя пользователя или фонового процесса, инициировавшего утверждение
+     */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void processApprove(UUID documentId, String initiator) {
         Document document = documentRepository.findById(documentId)

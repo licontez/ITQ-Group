@@ -15,6 +15,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * Фоновый обработчик для автоматического продвижения документов по жизненному циклу.
+ * <p>
+ * Реализует паттерн Polling (периодический опрос БД) с поддержкой асинхронного выполнения.
+ * Документы обрабатываются пачками (Batch Processing) по принципу FIFO.
+ * Для предотвращения блокировки основного потока приложения каждый воркер
+ * запускается в отдельном пуле потоков.
+ */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -26,6 +34,13 @@ public class DocumentWorker {
     @Value("${app.workers.batch-size:10}")
     private int batchSize;
 
+    /**
+     * Асинхронная периодическая задача для перевода документов из DRAFT в SUBMITTED.
+     * Запускается с фиксированной задержкой после завершения предыдущего цикла.
+     * <p>
+     * Включает защиту от "отравленных сообщений": если вся пачка падает
+     * с ошибкой, выводится предупреждение в лог для последующего ручного вмешательства.
+     */
     @Async
     @Scheduled(fixedDelayString = "${app.workers.submit-delay:5000}")
     public void processDrafts() {
@@ -54,6 +69,10 @@ public class DocumentWorker {
         }
     }
 
+    /**
+     * Асинхронная периодическая задача для финального утверждения документов
+     * (перевод из SUBMITTED в APPROVED) и регистрации их в реестре.
+     */
     @Async
     @Scheduled(fixedDelayString = "${app.workers.approve-delay:5000}")
     public void processSubmitted() {

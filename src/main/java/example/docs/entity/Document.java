@@ -13,6 +13,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Сущность документа в системе.
+ * Хранит основную информацию о документе и отслеживает его текущий статус.
+ * Жизненный цикл статусов: DRAFT -> SUBMITTED -> APPROVED.
+ */
 @Entity
 @Table(name = "documents")
 @Getter
@@ -43,6 +48,10 @@ public class Document {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
+    /**
+     * Поле для контроля версий при конкурентном доступе.
+     * Защищает от перезаписи данных при одновременном утверждении документа разными потоками.
+     */
     @Version
     private Long version;
 

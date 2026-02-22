@@ -11,6 +11,11 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * История изменения статусов документа.
+ * Фиксирует каждое действие (например, перевод в SUBMITTED или APPROVED), время его совершения
+ * и инициатора, обеспечивая полный аудит жизненного цикла документа.
+ */
 @Entity
 @Table(name = "document_history")
 @Getter
